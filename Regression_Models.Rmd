@@ -1,0 +1,102 @@
+---
+title: "Regression_Models"
+author: "Manish Patwal"
+date: "October 10, 2018"
+output:
+    pdf_document:
+      keep_tex: yes
+      latex_engine: pdflatex
+      
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Background
+Motor Trend, a magazine about the automobile industry is Looking at a data set of a collection of cars.They are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions.
+“Is an automatic or manual transmission better for MPG”
+"Quantify the MPG difference between automatic and manual transmissions"
+In the subsequent steps we will be using regression models to answer these questions
+
+#Data loading and Preprocessing
+
+```{r,message=FALSE}
+library(MASS)
+library(ggplot2)
+data("mtcars")
+#exploring the relationship between a set of variables and miles per gallon (MPG) (outcome).
+#“Is an automatic or manual transmission better for MPG”
+#"Quantify the MPG difference between automatic and manual transmissions"
+head(mtcars)
+str(mtcars)
+#Lets convert some of the numeric data to factors
+mtcars$cyl <- as.factor(mtcars$cyl)
+mtcars$vs <- as.factor(mtcars$vs)
+mtcars$am <- factor(mtcars$am)
+mtcars$gear <- factor(mtcars$gear)
+mtcars$carb <- factor(mtcars$carb)
+mtcars$am <- factor(mtcars$am,labels=c('Automatic','Manual'))
+head(mtcars)
+```
+
+#Exploratory Data Analysis
+```{r,message=FALSE}
+#Lets explore the relationship between mpg and transmission type
+plot1 <- ggplot(mtcars, aes(am, mpg))
+plot1 + geom_violin(aes(fill = am)) + geom_jitter(height = 0)
+
+```
+
+As can be seen the Manual transmission has higher mpg
+
+
+
+```{r,message=FALSE}
+
+# Further Exploratory analysis on relation ship between MPG, Weight Cycle
+plot2 <- ggplot(mtcars, aes(wt, mpg))
+plot2 + geom_area(aes(fill = cyl)) + geom_jitter(height = 0)
+```
+
+#Examining Signficant Relationship
+```{r,message=FALSE}
+#Lets examine the relation between mpg and am and wheter its significant or not
+T_Test <- t.test(mpg~am,data=mtcars);
+T_Test
+```
+
+As we can see the p value is less than .05 hence the relationship is statisticlly significant.
+
+#Linear Regression
+Lets calculate adjusted R Square using only one variable
+```{r,message=FALSE}
+Linear_Model <-lm(mpg~am, data=mtcars)
+summary(Linear_Model)$r.squared
+summary(Linear_Model)$adj.r.squared
+```
+The adjusted Rsquare is pretty low.This shows that only one variable is not sufficient to explain all the variance.
+
+# Multilinear Regression Model
+As the Adjusted R3 value is low we should examine other varaibles as well that may explain the variability
+```{r,message=FALSE}
+Multi_Linear_Model <-lm(mpg~., data=mtcars)
+summary(Multi_Linear_Model)$r.squared
+summary(Multi_Linear_Model)$adj.r.squared
+```
+
+The adjusted R2 square is 0.77 if we take all the variables. This can be improved if we take only the most important variables
+
+
+
+#Step Function
+```{r,message=FALSE}
+#https://www.math.ucla.edu/~anderson/rw1001/library/base/html/step.html
+Optimized_Model <- step(lm(data = mtcars, mpg ~.))
+summary(Optimized_Model)$r.squared
+summary(Optimized_Model)$adj.r.squared
+
+```
+This shows that though the multiple R Square has decreased, the overall adjusted R2 has increased from .77 to .84
+
+Also check How the AIC as decreased in steps. AIC shows that the model which has lower AIC value than the other is better than the other in the sense that it is less complex but still a good fit for the data.
+.
